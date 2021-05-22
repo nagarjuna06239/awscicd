@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mfsa-clstr-loadbalancer
+spec:
+  type: LoadBalancer
+  ports:
+  - name: "http"
+    port: 8085
+    targetPort: 8085
+  selector:
+    app: mfsa-clstr
