@@ -1,0 +1,40 @@
+version: 0.2
+
+env:
+  variables:
+    CODEBUILD_SRC_DIR: "./src"
+phases:
+   install:
+     # Build versions
+     runtime-versions:
+       java: corretto8
+   build:
+      commands:
+         - curl --version
+         - pwd
+         - mvn -version
+         - mvn clean install -DskipTests
+         - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 993460168844.dkr.ecr.ap-south-1.amazonaws.com
+         # Use Build phase to build your artifacts (compile, etc.)
+         - echo Entered the build phase...
+         - echo Building the Docker image...
+         - docker build -t awscicd .
+         - docker tag awscicd:latest 993460168844.dkr.ecr.ap-south-1.amazonaws.com/awscicd:latest
+   post_build:
+      commands:
+         # Use Post-Build for notifications, git tags, upload artifacts to S3
+         - echo Entered the post_build phase...
+         - echo Pushing the Docker image...
+         - docker push 993460168844.dkr.ecr.ap-south-1.amazonaws.com/awscicd:latest
+         
+         - export AWS_ACCESS_KEY_ID=AKIA6OTWXFCGIDNMMKAN
+         - export AWS_SECRET_ACCESS_KEY=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
+         - echo $AWS_ACCESS_KEY_ID 
+         - echo $AWS_SECRET_ACCESS_KEY
+         - aws sts get-caller-identity
+         - aws eks update-kubeconfig --name eksworkshop-eksctl --region ap-south-1
+         - kubectl delete deployments --all
+         - kubectl apply -f deployment.yaml
+        # check pod status
+         - echo check pod status
+         - kubectl get pods
